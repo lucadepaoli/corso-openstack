@@ -52,12 +52,21 @@ resources:
     properties:
       floating_network: "public"
       port_id: { get_resource: server1_port }
+  config:
+    type: OS::Heat::CloudConfig
+    properties:
+      cloud_config:
+        password: Password01
+        chpasswd: { expire: False }
+        ssh_pwauth: True
   server2:
     type: OS::Nova::Server
     properties:
       name: "SrvByHeat02"
       image: "LINUX_Centos_7"
       flavor: "elm.small"
+      user_data_format: RAW
+      user_data: { get_resource: config }
       networks:
         - network: { get_resource: private_net }
 
