@@ -1,0 +1,89 @@
+heat_template_version: 2013-05-23
+
+description: >
+  HOT template to create a new neutron network plus a router to the public
+  network, and for deploying two servers into the new network. The template also
+  assigns floating IP addresses to each server so they are routable from the
+  public network.
+
+parameters:
+  text:
+    type: string
+    description: Testo del Sito
+  p_subnet: 
+    type: string
+    description: Subnet per il Sito
+
+resources:
+  net:
+    type: OS::Neutron::Net
+    properties:
+      name: "BySito01"
+      
+  subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      network_id: { get_resource: net }
+      cidr: "192.168.127.0/24"
+      dns_nameservers: [ "8.8.8.8", "8.8.4.4" ]
+  router: 
+    type: OS::Neutron::Router
+    properties: 
+      external_gateway_info:
+        network: "public"
+  router_interface:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router_id: { get_resource: router }
+      subnet_id: { get_resource: subnet }
+      
+  server_web:
+    type: OS::Nova::Server
+    properties:
+      name: ItsServerWeb01
+      image: "LINUX_Centos_7"
+      flavor: "elm.medium"
+      user_data_format: RAW
+      user_data: { get_resource: config_web }
+      security_groups:
+        - web_its
+      networks:
+        - port: { get_resource: server_web_port }
+        
+  server_web_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: net }
+      fixed_ips:
+        - subnet_id: { get_resource: subnet }
+       
+  server_web_floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: "public"
+      port_id: { get_resource: server_web_port }
+      
+  config_web:
+    type: OS::Heat::CloudConfig
+    properties:
+      cloud_config:
+        password: Password01
+        chpasswd: { expire: False }
+        runcmd: 
+          - yum install httpd
+          - systemctl enable httpd
+          - systemctl start httpd
+    
+  security_groups:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: "web_its"
+      description: "Enable http from web"
+      rules:
+        - port_range_min: 80
+          port_range_max: 80
+          remote_ip_prefix: "0.0.0.0/0"
+          protocol: tcp
+    
+      
+  
