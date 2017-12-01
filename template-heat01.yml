@@ -52,8 +52,19 @@ resources:
     properties:
       floating_network: "public"
       port_id: { get_resource: server1_port }
+  server2:
+    type: OS::Nova::Server
+    properties:
+      name: "SrvByHeat02"
+      image: "LINUX_Centos_7"
+      flavor: "elm.small"
+      networks:
+        - network: { get_resource: private_net }
 
 outputs:
+  server2:
+    description: IP Address of SrvByHeat02
+    value: { get_attr: [ server2, first_address ] }
   server1_private_ip:
     description: IP address of server1 in private network
     value: { get_attr: [ server1, first_address ] }
