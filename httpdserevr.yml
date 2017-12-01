@@ -52,6 +52,8 @@ resources:
     type: OS::Neutron::Port
     properties:
       network_id: { get_resource: net }
+      security_groups:
+        - { get_resource: server_security_group }
       fixed_ips:
         - subnet_id: { get_resource: subnet }
        
@@ -72,6 +74,18 @@ resources:
           - systemctl enable httpd
           - systemctl start httpd
 
-    
+  server_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      description: Test group to demonstrate Neutron security group functionality with Heat.
+      name: test-security-group
+      rules: [
+        {remote_ip_prefix: 0.0.0.0/0,
+        protocol: tcp,
+        port_range_min: 80,
+        port_range_max: 80},
+        {remote_ip_prefix: 0.0.0.0/0,
+        protocol: icmp}]
+  
       
   
