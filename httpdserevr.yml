@@ -45,8 +45,6 @@ resources:
       flavor: "elm.medium"
       user_data_format: RAW
       user_data: { get_resource: config_web }
-      security_groups:
-        - web_its
       networks:
         - port: { get_resource: server_web_port }
         
@@ -70,20 +68,10 @@ resources:
         password: Password01
         chpasswd: { expire: False }
         runcmd: 
-          - yum install httpd
+          - yum -y install httpd
           - systemctl enable httpd
           - systemctl start httpd
-    
-  security_groups:
-    type: OS::Neutron::SecurityGroup
-    properties:
-      name: "web_its"
-      description: "Enable http from web"
-      rules:
-        - port_range_min: 80
-          port_range_max: 80
-          remote_ip_prefix: "0.0.0.0/0"
-          protocol: tcp
+
     
       
   
